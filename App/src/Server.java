@@ -9,7 +9,7 @@ public class Server extends HttpServlet {
 
    public void init() throws ServletException {
       // Do required initialization
-      message = "Hello World";
+      message = "Servlet is in execution";
    }
 
    public void doGet(HttpServletRequest request, HttpServletResponse response)
