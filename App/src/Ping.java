@@ -35,18 +35,18 @@ public class Ping extends HttpServlet {
 		
 			while ((s = inputStream.readLine()) != null) {
 				out.println("<p>"+s+"</p>");
-				//saveLogs(s);
+				saveLogs(s);
 			}
 		} catch (Exception e) {
 			out.println("<p>"+e.getMessage()+"</p>");		
 		}
 	}
 
-	// public void saveLogs(String lineWrite) {
-	// 	PingFile pingFile = new PingFile("ping.log");
-	// 	pingFile.saveLogs(lineWrite);
-	// 	pingFile.closeFile();
-	// }
+	public void saveLogs(String lineWrite) {
+		PingFile pingFile = new PingFile("ping.log");
+		pingFile.saveLogs(lineWrite);
+		pingFile.closeFile();
+	}
 
 	public void closeFile() {
 		try {
