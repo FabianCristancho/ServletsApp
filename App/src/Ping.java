@@ -4,25 +4,59 @@ import javax.servlet.http.*;
 
 // Extend HttpServlet class
 public class Ping extends HttpServlet {
- 
-   private String message;
 
-   public void init() throws ServletException {
-      // Do required initialization
-      message = "Ping en server 2 : ....";
-   }
+	private FileWriter file;
+	private PrintWriter pw;
+	private String message;
 
-   public void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-      
-      // Set response content type
-      response.setContentType("text/html");
-// Actual logic goes here.
-      PrintWriter out = response.getWriter();
-      out.println("<h1>" + message + "<h1>");
-   }
+   	public void init() throws ServletException {
+      	message = "Ping a máquinas virtuales";
+   	}
 
-   public void destroy() {
-      // do nothing.
-   }
+   	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		response.setContentType("text/html");
+		PrintWriter out = response.getWriter();
+		out.println("<head><meta charset='UTF-8'></head>");
+		out.println("<h3>PING MAQUINA 1<h3>");
+		getServerPing("192.168.100.136", out);
+		
+		out.println("<br><br>");
+
+		out.println("<h3>PING MAQUINA 2<h3>");
+		getServerPing("192.168.100.161", out);
+   	}
+
+	public void getServerPing(String ip, PrintWriter out){
+		try {
+			Process p = Runtime.getRuntime().exec("ping " +ip);
+			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			String s = "";
+		
+			while ((s = inputStream.readLine()) != null) {
+				out.println("<p>"+s+"</p>");
+				//saveLogs(s);
+			}
+		} catch (Exception e) {
+			out.println("<p>"+e.getMessage()+"</p>");		
+		}
+	}
+
+	// public void saveLogs(String lineWrite) {
+	// 	PingFile pingFile = new PingFile("ping.log");
+	// 	pingFile.saveLogs(lineWrite);
+	// 	pingFile.closeFile();
+	// }
+
+	public void closeFile() {
+		try {
+			if (null != file)
+				file.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+   	public void destroy() {
+   	}
 }

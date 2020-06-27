@@ -11,6 +11,10 @@
 	   <servlet-name>MyServer2</servlet-name>
 	   <servlet-class>Ping</servlet-class>
 	</servlet>
+	<servlet>
+	   <servlet-name>MyServer3</servlet-name>
+	   <servlet-class>PingFile</servlet-class>
+	</servlet>
 	<servlet-mapping>
 	   <servlet-name>MyServer</servlet-name>
 	   <url-pattern>/api</url-pattern>
@@ -18,5 +22,9 @@
 	<servlet-mapping>
 	   <servlet-name>MyServer2</servlet-name>
 	   <url-pattern>/ping</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+	   <servlet-name>MyServer3</servlet-name>
+	   <url-pattern>/file</url-pattern>
 	</servlet-mapping>
 </web-app>
