@@ -3,13 +3,13 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 // Extend HttpServlet class
-public class Server extends HttpServlet {
+public class Ping extends HttpServlet {
  
    private String message;
 
    public void init() throws ServletException {
       // Do required initialization
-      message = "Hacer ping a server2";
+      message = "Ping en server 2 : ....";
    }
 
    public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -19,7 +19,7 @@ public class Server extends HttpServlet {
       response.setContentType("text/html");
 // Actual logic goes here.
       PrintWriter out = response.getWriter();
-      out.println("<a href='/App/ping'>" + message + "</a>");
+      out.println("<h1>" + message + "<h1>");
    }
 
    public void destroy() {
