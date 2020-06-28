@@ -38,15 +38,22 @@ public class Server extends HttpServlet {
                      out.println("<div class='card'>");
                         out.println("<div class='card-header text-info'>SERVIDOR 1</div>");
                         out.println("<div class='card-body'>");
-                           out.println("<h5 class='card-title'>Otro Título</h5>");
-                           out.println("<p class='card-text'>With supporting text below as a natural lead-in to additional content.</p>");
-                           out.println("<a href='/App/ping' class='btn btn-primary'>Go somewhere</a>");
+                           out.println("<p class='card-text'>Evalue la disponibilidad del servidor</p>");
+                           out.println("<a href='/App/ping?id=1' class='btn btn-primary'>Hacer Ping a servidor</a>");
+                           out.println("<a href='#' class='btn btn-info'>Reiniciar Servidor</a>");
                         out.println("</div>");
                      out.println("</div>");
                   out.println("</div>");
+
                   out.println("<div class='col-md-6'>");
-                     out.println("<a href='/App/ping'>" + message + "</a>");
-                     out.println("<a href='#' class='btn btn-primary'> Ping </a>");
+                     out.println("<div class='card'>");
+                        out.println("<div class='card-header text-info'>SERVIDOR 2</div>");
+                        out.println("<div class='card-body'>");
+                           out.println("<p class='card-text'>Evalue la disponibilidad del servidor</p>");
+                           out.println("<a href='/App/ping?id=2' class='btn btn-primary'>Hacer Ping a servidor</a>");
+                           out.println("<a href='#' class='btn btn-info'>Reiniciar Servidor</a>");
+                        out.println("</div>");
+                     out.println("</div>");
                   out.println("</div>");
                out.println("</div>");
             out.println("</div>");
