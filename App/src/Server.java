@@ -73,7 +73,7 @@ public class Server extends HttpServlet {
             public void run() {
                while(true) {
                   try {
-                     ping.getServerPing("192.168.100.136", out, false);
+                     ping.getServerPing("192.168.100.126", out, false);
                      ping.getServerPing("192.168.100.161", out, false);
                      Thread.sleep(30000);
                   } catch (InterruptedException e) {

@@ -23,7 +23,7 @@ public class Ping extends HttpServlet {
 		switch(server){
 			case "1": 
 				title = "PING DEL SERVIDOR 1";
-				ip = "192.168.100.136";
+				ip = "192.168.100.126";
 			break;
 			case "2": 
 				title = "PING DEL SERVIDOR 2";
@@ -54,7 +54,7 @@ public class Ping extends HttpServlet {
 
 	public void getServerPing(String ip, PrintWriter out, boolean flag){
 		try {
-			Process p = Runtime.getRuntime().exec("ping " +ip);
+			Process p = Runtime.getRuntime().exec("ping -c 5 " +ip);
 			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			String s = "";
