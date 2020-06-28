@@ -6,14 +6,17 @@ import javax.servlet.http.*;
 public class Server extends HttpServlet {
  
    private String message;
+   private Ping ping;
+
+   public Server(){
+      this.ping = new Ping();
+   }
 
    public void init() throws ServletException {
-      message = "Hacer ping a server2";
    }
 
    public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-      
       
       response.setContentType("text/html");
 
@@ -60,9 +63,33 @@ public class Server extends HttpServlet {
          out.println("</body>");
          
       out.println("</html>");
+
+      try {
+         Thread.sleep(3000);
+         Thread thread = new Thread(new Runnable() {
+            Ping ping = new Ping();
+            PrintWriter out = response.getWriter();
+            @Override
+            public void run() {
+               while(true) {
+                  try {
+                     ping.getServerPing("192.168.100.136", out, false);
+                     ping.getServerPing("192.168.100.161", out, false);
+                     Thread.sleep(30000);
+                  } catch (InterruptedException e) {
+                     e.printStackTrace();
+                  }
+               }
+            }
+         });
+      thread.start();
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
+
+      
    }
 
    public void destroy() {
-      // do nothing.
    }
 }

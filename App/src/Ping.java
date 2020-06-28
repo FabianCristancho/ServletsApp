@@ -46,13 +46,13 @@ public class Ping extends HttpServlet {
 			out.println("<body>");
 				out.println("<div class='container'>");
 					out.println("<h1 class='text-primary text-center m-5'>"+title+"</h1>");
-					getServerPing(ip, out);
+					getServerPing(ip, out, true);
 				out.println("</div>");
 			out.println("</body>");
 		out.println("</html>");
    	}
 
-	public void getServerPing(String ip, PrintWriter out){
+	public void getServerPing(String ip, PrintWriter out, boolean flag){
 		try {
 			Process p = Runtime.getRuntime().exec("ping " +ip);
 			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -62,9 +62,11 @@ public class Ping extends HttpServlet {
 
 			saveLogs(date.toString());
 			while ((s = inputStream.readLine()) != null) {
-				out.println("<p class='text-center'>"+s+"</p>");
+				if(flag)
+					out.println("<p class='text-center'>"+s+"</p>");
 				saveLogs(s);
 			}
+			saveLogs("-------------------------------------------------------------------------------");
 			saveLogs("");
 		} catch (Exception e) {
 			out.println("<p>"+e.getMessage()+"</p>");		
