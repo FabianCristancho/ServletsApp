@@ -14,3 +14,5 @@
 
 5. Abra su navegador de preferencia, y digite localhost:8080/App/api
 6. Si se hicieron los pasos anteriores de forma correcta, deberá ver un mensaje que describe que la aplicación se está ejecutando exitosamente
+
+7. Instalar JSch en https://search.maven.org/search?q=g:com.jcraft%20AND%20a:jsch
