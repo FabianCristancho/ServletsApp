@@ -43,7 +43,7 @@ public class Ping extends HttpServlet {
 	}
 
 	public void saveLogs(String lineWrite) {
-		PingFile pingFile = new PingFile("F:/SD/ping.log");
+		PingFile pingFile = new PingFile("webapps/App/src/file/ping.log");
 		pingFile.saveLogs(lineWrite);
 		pingFile.closeFile();
 	}

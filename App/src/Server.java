@@ -31,9 +31,24 @@ public class Server extends HttpServlet {
 
          out.println("<body>");
             out.println("<div class='container'>");
-               out.println("<h1 class='text-center text-primary'>ADMINISTRADOR DE SERVIDORES</h1>");
-               out.println("<a href='/App/ping'>" + message + "</a>");
-               out.println("<a href='#' class='btn btn-primary'> Ping </a>");
+               out.println("<h1 class='text-center text-primary m-5'>ADMINISTRADOR DE SERVIDORES</h1>");
+
+               out.print("<div class='row'>");
+                  out.println("<div class='col-md-6'>");
+                     out.println("<div class='card'>");
+                        out.println("<div class='card-header text-info'>SERVIDOR 1</div>");
+                        out.println("<div class='card-body'>");
+                           out.println("<h5 class='card-title'>Otro Título</h5>");
+                           out.println("<p class='card-text'>With supporting text below as a natural lead-in to additional content.</p>");
+                           out.println("<a href='/App/ping' class='btn btn-primary'>Go somewhere</a>");
+                        out.println("</div>");
+                     out.println("</div>");
+                  out.println("</div>");
+                  out.println("<div class='col-md-6'>");
+                     out.println("<a href='/App/ping'>" + message + "</a>");
+                     out.println("<a href='#' class='btn btn-primary'> Ping </a>");
+                  out.println("</div>");
+               out.println("</div>");
             out.println("</div>");
          out.println("</body>");
          
