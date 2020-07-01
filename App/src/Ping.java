@@ -9,6 +9,11 @@ public class Ping extends HttpServlet {
 	private FileWriter file;
 	private PrintWriter pw;
 	private String message;
+	private PingFile pingFile;
+
+	public Ping(){
+		pingFile = new PingFile("webapps/App/src/logs/ping.log");
+	}
 
    	public void init() throws ServletException {
       	message = "Ping a máquinas virtuales";
@@ -23,7 +28,7 @@ public class Ping extends HttpServlet {
 		switch(server){
 			case "1": 
 				title = "PING DEL SERVIDOR 1";
-				ip = "192.168.100.136";
+				ip = "www.google.com";
 			break;
 			case "2": 
 				title = "PING DEL SERVIDOR 2";
@@ -60,23 +65,18 @@ public class Ping extends HttpServlet {
 			String s = "";
 			Date date = new Date();
 
-			saveLogs(date.toString());
+			pingFile.saveLogs(date.toString());
 			while ((s = inputStream.readLine()) != null) {
 				if(flag)
 					out.println("<p class='text-center'>"+s+"</p>");
-				saveLogs(s);
+				pingFile.saveLogs(s);
 			}
-			saveLogs("-------------------------------------------------------------------------------");
-			saveLogs("");
+			pingFile.saveLogs("-------------------------------------------------------------------------------");
+			pingFile.saveLogs("");
+			pingFile.closeFile();
 		} catch (Exception e) {
 			out.println("<p>"+e.getMessage()+"</p>");		
 		}
-	}
-
-	public void saveLogs(String lineWrite) {
-		PingFile pingFile = new PingFile("webapps/App/src/logs/ping.log");
-		pingFile.saveLogs(lineWrite);
-		pingFile.closeFile();
 	}
 
 	public void closeFile() {

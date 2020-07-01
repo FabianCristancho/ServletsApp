@@ -64,30 +64,22 @@ public class Server extends HttpServlet {
          
       out.println("</html>");
 
-      try {
-         Thread.sleep(3000);
-         Thread thread = new Thread(new Runnable() {
+         new Thread(new Runnable() {
             Ping ping = new Ping();
             PrintWriter out = response.getWriter();
             @Override
             public void run() {
                while(true) {
                   try {
-                     ping.getServerPing("192.168.100.136", out, false);
-                     ping.getServerPing("192.168.100.161", out, false);
-                     Thread.sleep(30000);
+		     Thread.sleep(30000);
+                     ping.getServerPing("www.google.com", out, false);
+                     ping.getServerPing("www.github.com", out, false);
                   } catch (InterruptedException e) {
                      e.printStackTrace();
                   }
                }
             }
-         });
-      thread.start();
-      } catch (InterruptedException e) {
-         e.printStackTrace();
-      }
-
-      
+         }).start();
    }
 
    public void destroy() {
