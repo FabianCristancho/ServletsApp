@@ -2,36 +2,83 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.util.Date;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 
 // Extend HttpServlet class
 public class Ping extends HttpServlet {
 
-	private FileWriter file;
-	private PrintWriter pw;
-	private String message;
+	private PingFile pingFile;
+	MyQueue<String> myQueue;
 
-   	public void init() throws ServletException {
-      	message = "Ping a máquinas virtuales";
-   	}
+	public Ping(){
+		this.pingFile = new PingFile("webapps/App/src/logs/ping.log");
+		this.myQueue = new MyQueue<String>();
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				while(true){
+					try {      
+						Thread.sleep(30000);     
+						addRequest();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+	}
 
    	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		String server = request.getParameter("id");
 		String title = "";
 		String ip = "";
+		String user = "";
+		String password = "";
+		boolean isPing = true;
 		
 		switch(server){
 			case "1": 
 				title = "PING DEL SERVIDOR 1";
-				ip = "192.168.100.126";
+				ip = "192.168.100.136";
+				isPing = true;
 			break;
 			case "2": 
 				title = "PING DEL SERVIDOR 2";
 				ip = "192.168.100.161";
+				isPing = true;
+			break;
+			case "3": 
+				title = "REINICIO DE SERVIDOR 1";
+				ip = "192.168.100.136";
+				user = "server1";
+				password = "1234567";
+				isPing = false;
+			break;
+			case "4": 
+				title = "REINICIO DE SERVIDOR 2";
+				ip = "192.168.100.161";
+				user = "server2";
+				password = "1234567";
+				isPing = false;
 			break;
 		}
+		
+		if(isPing)
+			this.myQueue.addElement("Haciendo ping a servidor con ip " +ip);
+		else
+			this.myQueue.addElement("Reiniciando el servidor con ip " +ip);
+
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
+	
 		out.println("<!DOCTYPE html>");
       	out.println("<html>");
          		out.println("<head>");
@@ -46,48 +93,88 @@ public class Ping extends HttpServlet {
 			out.println("<body>");
 				out.println("<div class='container'>");
 					out.println("<h1 class='text-primary text-center m-5'>"+title+"</h1>");
-					getServerPing(ip, out, true);
+					if(isPing)
+						getServerPing(ip, out, true);
+					else
+						getRebootServer(ip, user, password);
 				out.println("</div>");
 			out.println("</body>");
 		out.println("</html>");
-   	}
+	   }
+	   
+
+	public void addRequest(){
+		if(!this.myQueue.isEmpty()){
+			Date date = new Date();
+			pingFile.saveLogs(date.toString());
+			pingFile.saveLogs(this.myQueue.getElement());
+			pingFile.saveLogs("");
+		}
+	}
 
 	public void getServerPing(String ip, PrintWriter out, boolean flag){
 		try {
-			Process p = Runtime.getRuntime().exec("ping -c 5 " +ip);
+			Process p = Runtime.getRuntime().exec("ping " +ip);
 			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			String s = "";
 			Date date = new Date();
 
-			saveLogs(date.toString());
 			while ((s = inputStream.readLine()) != null) {
-				if(flag)
-					out.println("<p class='text-center'>"+s+"</p>");
-				saveLogs(s);
+				out.println("<p class='text-center'>"+s+"</p>");
 			}
-			saveLogs("-------------------------------------------------------------------------------");
-			saveLogs("");
 		} catch (Exception e) {
 			out.println("<p>"+e.getMessage()+"</p>");		
 		}
 	}
 
-	public void saveLogs(String lineWrite) {
-		PingFile pingFile = new PingFile("webapps/App/src/logs/ping.log");
-		pingFile.saveLogs(lineWrite);
-		pingFile.closeFile();
-	}
+	public void getRebootServer(String ip, String user, String password){
+		JSch jsch = new JSch();
 
-	public void closeFile() {
+		Session session;
 		try {
-			if (null != file)
-				file.close();
+
+			// Open a Session to remote SSH server and Connect.
+			// Set User and IP of the remote host and SSH port.
+			session = jsch.getSession(user, ip, 22);
+			// When we do SSH to a remote host for the 1st time or if key at the remote host
+			// changes, we will be prompted to confirm the authenticity of remote host.
+			// This check feature is controlled by StrictHostKeyChecking ssh parameter.
+			// By default StrictHostKeyChecking is set to yes as a security measure.
+			session.setConfig("StrictHostKeyChecking", "no");
+			// Set password
+			session.setPassword(password);
+			session.connect();
+
+			// create the execution channel over the session
+			ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+			// Set the command to execute on the channel and execute the command
+			channelExec.setCommand("echo 1234567 | sudo -S reboot");
+			channelExec.connect();
+
+			// Get an InputStream from this channel and read messages, generated
+			// by the executing command, from the remote side.
+			InputStream in = channelExec.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				System.out.println(line);
+			}
+
+			// Command execution completed here.
+
+			// Retrieve the exit status of the executed command
+			int exitStatus = channelExec.getExitStatus();
+			if (exitStatus > 0) {
+				System.out.println("Remote script exec error! " + exitStatus);
+				System.out.println(channelExec.getErrStream());
+			}
+			// Disconnect the Session
+			session.disconnect();
+		} catch (JSchException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-   	public void destroy() {
-   	}
 }

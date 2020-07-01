@@ -5,11 +5,8 @@ import javax.servlet.http.*;
 // Extend HttpServlet class
 public class Server extends HttpServlet {
  
-   private String message;
-   private Ping ping;
 
    public Server(){
-      this.ping = new Ping();
    }
 
    public void init() throws ServletException {
@@ -26,6 +23,7 @@ public class Server extends HttpServlet {
          out.println("<head>");
             out.println("<meta charset='utf-8'>");
             out.println("<title>Administrador de servidores</title>");
+            out.println("<script> function myFunction() {alert('Reiniciar server');}</script>");
             out.println("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' integrity='sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk' crossorigin='anonymous'>");
             out.println("<script src='https://code.jquery.com/jquery-3.5.1.slim.min.js' integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj' crossorigin='anonymous'></script>");
             out.println("<script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous'></script>");
@@ -43,7 +41,7 @@ public class Server extends HttpServlet {
                         out.println("<div class='card-body'>");
                            out.println("<p class='card-text'>Evalue la disponibilidad del servidor</p>");
                            out.println("<a href='/App/ping?id=1' class='btn btn-primary'>Hacer Ping a servidor</a>");
-                           out.println("<a href='#' class='btn btn-info'>Reiniciar Servidor</a>");
+                           out.println("<a href='/App/ping?id=3' class='btn btn-info'>Reiniciar Servidor</a>");
                         out.println("</div>");
                      out.println("</div>");
                   out.println("</div>");
@@ -54,7 +52,7 @@ public class Server extends HttpServlet {
                         out.println("<div class='card-body'>");
                            out.println("<p class='card-text'>Evalue la disponibilidad del servidor</p>");
                            out.println("<a href='/App/ping?id=2' class='btn btn-primary'>Hacer Ping a servidor</a>");
-                           out.println("<a href='#' class='btn btn-info'>Reiniciar Servidor</a>");
+                           out.println("<a href='/App/ping?id=4' class='btn btn-info'>Reiniciar Servidor</a>");
                         out.println("</div>");
                      out.println("</div>");
                   out.println("</div>");
@@ -63,33 +61,5 @@ public class Server extends HttpServlet {
          out.println("</body>");
          
       out.println("</html>");
-
-      try {
-         Thread.sleep(3000);
-         Thread thread = new Thread(new Runnable() {
-            Ping ping = new Ping();
-            PrintWriter out = response.getWriter();
-            @Override
-            public void run() {
-               while(true) {
-                  try {
-                     ping.getServerPing("192.168.100.126", out, false);
-                     ping.getServerPing("192.168.100.161", out, false);
-                     Thread.sleep(30000);
-                  } catch (InterruptedException e) {
-                     e.printStackTrace();
-                  }
-               }
-            }
-         });
-      thread.start();
-      } catch (InterruptedException e) {
-         e.printStackTrace();
-      }
-
-      
-   }
-
-   public void destroy() {
    }
 }
