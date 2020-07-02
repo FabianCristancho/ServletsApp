@@ -10,11 +10,15 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 // Extend HttpServlet class
 public class Ping extends HttpServlet {
 
 	private PingFile pingFile;
+	private String messageLog;
 	MyQueue<String> myQueue;
 
 	public Ping(){
@@ -25,7 +29,7 @@ public class Ping extends HttpServlet {
 			public void run() {
 				while(true){
 					try {      
-						Thread.sleep(30000);     
+						Thread.sleep(30000);    
 						addRequest();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -71,10 +75,11 @@ public class Ping extends HttpServlet {
 			break;
 		}
 		
-		if(isPing)
-			this.myQueue.addElement("Haciendo ping a servidor con ip " +ip);
-		else
-			this.myQueue.addElement("Reiniciando el servidor con ip " +ip);
+		if(isPing){
+			this.myQueue.addElement("Haciendo ping a servidor con ip " +ip +"\n");
+		}else{
+			this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
+		}
 
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
@@ -104,17 +109,44 @@ public class Ping extends HttpServlet {
 	   
 
 	public void addRequest(){
-		if(!this.myQueue.isEmpty()){
-			Date date = new Date();
-			pingFile.saveLogs(date.toString());
-			pingFile.saveLogs(this.myQueue.getElement());
-			pingFile.saveLogs("");
+		if(!this.myQueue.isEmpty())
+			addEventLogger(this.myQueue.getElement());
+	}
+
+	/**
+	 * Agrega un evento al archivo log
+	 * @param path Ruta del archivo
+	 * @param message Mensaje que se agrega al log
+	 */
+	public static void addEventLogger(String message) {
+
+		Logger logger = Logger.getGlobal();
+		FileHandler fh;
+
+		try {
+
+			fh = new FileHandler("webapps/App/src/logs/ping.log", true);
+			logger.addHandler(fh);
+
+			SimpleFormatter formatter = new SimpleFormatter();
+			fh.setFormatter(formatter);
+
+			logger.info(message);
+			fh.close();
+
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
 	public void getServerPing(String ip, PrintWriter out, boolean flag){
 		try {
 			Process p = Runtime.getRuntime().exec("ping " +ip);
+			int returnVal = p.waitFor(); 
+			boolean reachable = (returnVal==0); 
+			out.println(reachable);   
 			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			String s = "";
@@ -149,7 +181,7 @@ public class Ping extends HttpServlet {
 			// create the execution channel over the session
 			ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
 			// Set the command to execute on the channel and execute the command
-			channelExec.setCommand("echo 1234567 | sudo -S reboot");
+			channelExec.setCommand("echo " +password +" | sudo -S reboot");
 			channelExec.connect();
 
 			// Get an InputStream from this channel and read messages, generated
