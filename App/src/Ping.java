@@ -12,13 +12,18 @@ import java.util.logging.SimpleFormatter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-// Extend HttpServlet class
+/**
+ * Clase Ping, encargada de manejar las acciones del usuario relacionadas con los servidores
+ */
 public class Ping extends HttpServlet {
 
 	private PingFile pingFile;
 	private String messageLog;
 	MyQueue<String> myQueue;
 
+	/**
+	 * Constructor de la clase Ping. Ejecuta un hilo
+	 */
 	public Ping(){
 		this.pingFile = new PingFile("webapps/App/src/logs/ping.log");
 		this.myQueue = new MyQueue<String>();
@@ -48,7 +53,7 @@ public class Ping extends HttpServlet {
 
 		if(Integer.parseInt(server)%2!=0){
 			//Servidor 1
-			ip = "192.168.100.137"; 
+			ip = "192.168.100.136"; 
 			user = "server1";
 			password = "1234567";
 		}else{
@@ -76,12 +81,6 @@ public class Ping extends HttpServlet {
 				isPing = false;
 			break;
 		}
-		
-		// if(isPing){
-		// 	this.myQueue.addElement("Haciendo ping a servidor con ip " +ip +"\n");
-		// }else{
-		// 	this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
-		// }
 
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
@@ -116,41 +115,23 @@ public class Ping extends HttpServlet {
 						out.println("<div class='text-center'>");
 							out.println("<a href='/App/api' class='btn btn-info'>Regresar</a>");
 						out.println("</div>");
-						this.myQueue.addElement("Fallo al hacer ping. Servidor con IP " +ip +" no disponible \n");
+						if(Integer.parseInt(server)<=2)
+							this.myQueue.addElement("Fallo al hacer ping. Servidor con IP " +ip +" no disponible \n");
+						else
+							this.myQueue.addElement("No se pudo reiniciar el servidor. Servidor con IP " +ip +" no disponible \n");
+
 					}
 				out.println("</div>");
 			out.println("</body>");
 		out.println("</html>");
 	   }
-	
-	   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		   doGet(request, response);
-		   response.setContentType("text/html");
-		   PrintWriter out = response.getWriter();
-		   out.println("<!DOCTYPE html>");
-		   out.println("<html>");
-			out.println("<head>");
-				out.println("<meta charset='utf-8'>");
-				out.println("<title>Administrador de servidores</title>");
-				out.println("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' integrity='sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk' crossorigin='anonymous'>");
-				out.println("<script src='https://code.jquery.com/jquery-3.5.1.slim.min.js' integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj' crossorigin='anonymous'></script>");
-				out.println("<script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous'></script>");
-				out.println("<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js' integrity='sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI' crossorigin='anonymous'></script>");
-			out.println("</head>");
-			out.println("<body>");
-				out.println("<div class='container'>");
-					out.println("<h1 class='text-primary text-center m-5'>REINICIO DE SERVIDOR</h1>");
-					out.println("<p class='text-primary text-center m-5'>IP: "+request.getParameter("ip")+"</p>");
-					getRebootServer(out, request.getParameter("ip"), request.getParameter("user"), request.getParameter("password"));
-				out.println("</div>");
-		   	out.println("</body>");
-		   out.println("</html>");
-	   }
 	   
-
+	/**
+	 * Agrega una nueva solicitud al archivo de logs
+	 */
 	public void addRequest(){
 		if(!this.myQueue.isEmpty())
-			addEventLogger(this.myQueue.getElement());
+			event(this.myQueue.getElement());
 	}
 
 	/**
@@ -158,7 +139,7 @@ public class Ping extends HttpServlet {
 	 * @param path Ruta del archivo
 	 * @param message Mensaje que se agrega al log
 	 */
-	public static void addEventLogger(String message) {
+	public static void event(String message) {
 
 		Logger logger = Logger.getGlobal();
 		FileHandler fh;
@@ -181,6 +162,9 @@ public class Ping extends HttpServlet {
 		}
 	}
 
+	/**
+	 * Se encarga de hacerle ping al servidor que se desea
+	 */
 	public void getServerPing(String ip, PrintWriter out, boolean flag){
 
 		try {
@@ -204,32 +188,25 @@ public class Ping extends HttpServlet {
 		}
 	}
 
+	/**
+	 * Se encarga de reiniciar un servidor
+	 */
 	public void getRebootServer(PrintWriter out, String ip, String user, String password){
 		JSch jsch = new JSch();
 
 		Session session;
 		try {
 
-			// Open a Session to remote SSH server and Connect.
-			// Set User and IP of the remote host and SSH port.
 			session = jsch.getSession(user, ip, 22);
-			// When we do SSH to a remote host for the 1st time or if key at the remote host
-			// changes, we will be prompted to confirm the authenticity of remote host.
-			// This check feature is controlled by StrictHostKeyChecking ssh parameter.
-			// By default StrictHostKeyChecking is set to yes as a security measure.
 			session.setConfig("StrictHostKeyChecking", "no");
-			// Set password
+			
 			session.setPassword(password);
 			session.connect();
 
-			// create the execution channel over the session
 			ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
-			// Set the command to execute on the channel and execute the command
 			channelExec.setCommand("echo " +password +" | sudo -S reboot");
 			channelExec.connect();
 
-			// Get an InputStream from this channel and read messages, generated
-			// by the executing command, from the remote side.
 			InputStream in = channelExec.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 			String line;
@@ -237,9 +214,6 @@ public class Ping extends HttpServlet {
 				System.out.println(line);
 			}
 
-			// Command execution completed here.
-
-			// Retrieve the exit status of the executed command
 			int exitStatus = channelExec.getExitStatus();
 			if (exitStatus > 0) {
 				out.println("<p class='text-center text-danger'>Ha ocurrido un error al reiniciar el servidor, compruebe los permisos de root </p>");
@@ -253,7 +227,6 @@ public class Ping extends HttpServlet {
 				out.println("</div>");
 				this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
 			}
-			// Disconnect the Session
 			session.disconnect();
 		} catch (JSchException e) {
 			this.myQueue.addElement("[ERROR] Ha ocurrido un problema al reiniciar el servidor con IP " +ip +". Compruebe los permisos del servidor\n");
@@ -263,7 +236,13 @@ public class Ping extends HttpServlet {
 		}
 	}
 
-	
+	/**
+	 * Determina si un servidor esta disponible, a través de su ip
+	 * @param address Direccion IP
+	 * @param port Puertp
+	 * @param time Tiempo de espera en milisegundos
+	 * @return true si el servidor esta disponible
+	 */
 	private boolean isReachable(String address, int port, int time) {
 		try {
 			try (Socket s = new Socket()){
