@@ -2,10 +2,6 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.util.Date;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -13,6 +9,8 @@ import com.jcraft.jsch.Session;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 // Extend HttpServlet class
 public class Ping extends HttpServlet {
@@ -47,39 +45,43 @@ public class Ping extends HttpServlet {
 		String user = "";
 		String password = "";
 		boolean isPing = true;
+
+		if(Integer.parseInt(server)%2!=0){
+			//Servidor 1
+			ip = "192.168.100.137"; 
+			user = "server1";
+			password = "1234567";
+		}else{
+			//Servidor 2
+			ip = "192.168.100.161"; 
+			user = "server2";
+			password = "1234567";
+		}
 		
 		switch(server){
 			case "1": 
 				title = "PING DEL SERVIDOR 1";
-				ip = "192.168.100.136";
 				isPing = true;
 			break;
 			case "2": 
 				title = "PING DEL SERVIDOR 2";
-				ip = "192.168.100.161";
 				isPing = true;
 			break;
 			case "3": 
 				title = "REINICIO DE SERVIDOR 1";
-				ip = "192.168.100.136";
-				user = "server1";
-				password = "1234567";
 				isPing = false;
 			break;
 			case "4": 
 				title = "REINICIO DE SERVIDOR 2";
-				ip = "192.168.100.161";
-				user = "server2";
-				password = "1234567";
 				isPing = false;
 			break;
 		}
 		
-		if(isPing){
-			this.myQueue.addElement("Haciendo ping a servidor con ip " +ip +"\n");
-		}else{
-			this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
-		}
+		// if(isPing){
+		// 	this.myQueue.addElement("Haciendo ping a servidor con ip " +ip +"\n");
+		// }else{
+		// 	this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
+		// }
 
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
@@ -90,6 +92,7 @@ public class Ping extends HttpServlet {
 				out.println("<meta charset='utf-8'>");
 				out.println("<title>Administrador de servidores</title>");
 				out.println("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' integrity='sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk' crossorigin='anonymous'>");
+				out.println("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js'></script>");
 				out.println("<script src='https://code.jquery.com/jquery-3.5.1.slim.min.js' integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj' crossorigin='anonymous'></script>");
 				out.println("<script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous'></script>");
 				out.println("<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js' integrity='sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI' crossorigin='anonymous'></script>");
@@ -97,14 +100,51 @@ public class Ping extends HttpServlet {
 
 			out.println("<body>");
 				out.println("<div class='container'>");
-					out.println("<h1 class='text-primary text-center m-5'>"+title+"</h1>");
-					if(isPing)
-						getServerPing(ip, out, true);
-					else
-						getRebootServer(ip, user, password);
+					out.println("<h1 class='text-primary text-center mt-4 mb-1'>"+title+"</h1>");
+					out.println("<h5 class='text-center mb-3'>"+ip+"</h5>");
+
+					if(isReachable(ip, 22, 3000)){
+						if(isPing)
+							getServerPing(ip, out, true);
+						else
+							getRebootServer(out, ip, user, password);
+					}else{
+						out.println("<p class='text-center text-danger mt-4'>Lo sentimos, el servidor no esta disponible en este momento :( </p>");
+						out.println("<div class='text-center'>");
+							out.println("<img class='image' src='https://thumbs.dreamstime.com/b/icono-del-vector-color-glyph-servidor-error-elementos-para-los-apps-m-viles-concepto-y-web-l-nea-fina-iconos-el-dise-o-desarrollo-146391626.jpg' alt='Server unavailable' width='200' height='220'>");
+						out.println("</div>");
+						out.println("<div class='text-center'>");
+							out.println("<a href='/App/api' class='btn btn-info'>Regresar</a>");
+						out.println("</div>");
+						this.myQueue.addElement("Fallo al hacer ping. Servidor con IP " +ip +" no disponible \n");
+					}
 				out.println("</div>");
 			out.println("</body>");
 		out.println("</html>");
+	   }
+	
+	   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		   doGet(request, response);
+		   response.setContentType("text/html");
+		   PrintWriter out = response.getWriter();
+		   out.println("<!DOCTYPE html>");
+		   out.println("<html>");
+			out.println("<head>");
+				out.println("<meta charset='utf-8'>");
+				out.println("<title>Administrador de servidores</title>");
+				out.println("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' integrity='sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk' crossorigin='anonymous'>");
+				out.println("<script src='https://code.jquery.com/jquery-3.5.1.slim.min.js' integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj' crossorigin='anonymous'></script>");
+				out.println("<script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous'></script>");
+				out.println("<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js' integrity='sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI' crossorigin='anonymous'></script>");
+			out.println("</head>");
+			out.println("<body>");
+				out.println("<div class='container'>");
+					out.println("<h1 class='text-primary text-center m-5'>REINICIO DE SERVIDOR</h1>");
+					out.println("<p class='text-primary text-center m-5'>IP: "+request.getParameter("ip")+"</p>");
+					getRebootServer(out, request.getParameter("ip"), request.getParameter("user"), request.getParameter("password"));
+				out.println("</div>");
+		   	out.println("</body>");
+		   out.println("</html>");
 	   }
 	   
 
@@ -142,25 +182,29 @@ public class Ping extends HttpServlet {
 	}
 
 	public void getServerPing(String ip, PrintWriter out, boolean flag){
-		try {
-			Process p = Runtime.getRuntime().exec("ping " +ip);
-			int returnVal = p.waitFor(); 
-			boolean reachable = (returnVal==0); 
-			out.println(reachable);   
-			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
+		try {
+			Process p = Runtime.getRuntime().exec("ping " +ip);  
+			BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));	
 			String s = "";
 			Date date = new Date();
-
+			out.println("<div class='text-center'>");
+				out.println("<img class='image' src='https://icon-library.com/images/icon-ping/icon-ping-28.jpg' alt='Server Ping' width='200' height='220'>");
+			out.println("</div>");
+			out.println("<div class='text-center'>");
+				out.println("<a href='/App/api' class='btn btn-info'>Regresar</a>");
+			out.println("</div>");
 			while ((s = inputStream.readLine()) != null) {
 				out.println("<p class='text-center'>"+s+"</p>");
 			}
+			this.myQueue.addElement("Haciendo ping a servidor con IP " +ip +"\n");
 		} catch (Exception e) {
 			out.println("<p>"+e.getMessage()+"</p>");		
+			this.myQueue.addElement("[ERROR] Fallo al hacer ping a servidor con IP " +ip +": " +e.getMessage());
 		}
 	}
 
-	public void getRebootServer(String ip, String user, String password){
+	public void getRebootServer(PrintWriter out, String ip, String user, String password){
 		JSch jsch = new JSch();
 
 		Session session;
@@ -198,15 +242,36 @@ public class Ping extends HttpServlet {
 			// Retrieve the exit status of the executed command
 			int exitStatus = channelExec.getExitStatus();
 			if (exitStatus > 0) {
-				System.out.println("Remote script exec error! " + exitStatus);
-				System.out.println(channelExec.getErrStream());
+				out.println("<p class='text-center text-danger'>Ha ocurrido un error al reiniciar el servidor, compruebe los permisos de root </p>");
+				this.myQueue.addElement("Remote script exec error! " + exitStatus +"\n");
+				this.myQueue.addElement(channelExec.getErrStream() +"\n");
+			}else{
+				out.println("<p class='text-center text-success'>El servidor se esta reiniciando satisfactoriamente </p>");
+				out.println("<div class='text-center mb-3'> <img src='https://66.media.tumblr.com/3c66642b189119f521255b9c9e5a9903/tumblr_oa04ubDck91r2gwz1o1_400.gifv' alt='Reboot server'> </div>");
+				out.println("<div class='text-center'>");
+					out.println("<a href='/App/api' class='btn btn-info'>Regresar</a>");
+				out.println("</div>");
+				this.myQueue.addElement("Reiniciando el servidor con ip " +ip +"\n");
 			}
 			// Disconnect the Session
 			session.disconnect();
 		} catch (JSchException e) {
-			e.printStackTrace();
+			this.myQueue.addElement("[ERROR] Ha ocurrido un problema al reiniciar el servidor con IP " +ip +". Compruebe los permisos del servidor\n");
 		} catch (IOException e) {
+			this.myQueue.addElement("[ERROR] Ha ocurrido un problema al reiniciar el servidor con IP " +ip +"\n");
 			e.printStackTrace();
+		}
+	}
+
+	
+	private boolean isReachable(String address, int port, int time) {
+		try {
+			try (Socket s = new Socket()){
+				s.connect(new InetSocketAddress(address, port), time);
+			}
+			return true;
+		}catch (IOException e) {
+			return false;
 		}
 	}
 }
